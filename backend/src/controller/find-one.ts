@@ -7,7 +7,10 @@ export const findOne = async (req: Request, res: Response) => {
     id: z.string().transform((value) => parseInt(value)),
   });
   const { id } = paramsSchema.parse(req.params);
-  const player = await prisma.player.findUnique({ where: { id } });
+  const player = await prisma.player.findUnique({
+    where: { id },
+    include: { Achievements: true },
+  });
 
   return res.json(player);
 };

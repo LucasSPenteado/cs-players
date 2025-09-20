@@ -14,10 +14,20 @@ datasource db {
 }
 
 model Player {
-  id Int @id @default(autoincrement())
-  name String
-  nickName String
-  dateOfBirth DateTime @default(now())
-  currentTeam String?
-  achievements String?
+  id           Int            @id @default(autoincrement())
+  name         String
+  nickName     String
+  dateOfBirth  DateTime       @default(now())
+  currentTeam  String?
+  Achievements Achievements[]
+}
+
+model Achievements {
+  major        Int?
+  eslProLeague Int?
+  blast        Int?
+  dreamhack    Int?
+  iem          Int?
+  player       Player @relation(fields: [playerId], references: [id])
+  playerId     Int    @unique
 }

@@ -7,7 +7,11 @@ export const deletePlayer = async (req: Request, res: Response) => {
     id: z.string().transform((value) => parseInt(value)),
   });
   const { id } = paramsSchema.parse(req.params);
-  const player = await prisma.player.delete({ where: { id } });
+  const player = await prisma.player.delete({
+    where: { id },
+
+    include: { Achievements: true },
+  });
 
   return res.json(player);
 };

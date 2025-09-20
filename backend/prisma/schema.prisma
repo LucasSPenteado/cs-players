@@ -28,6 +28,6 @@ model Achievements {
   blast        Int?
   dreamhack    Int?
   iem          Int?
-  player       Player @relation(fields: [playerId], references: [id])
+  player       Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
   playerId     Int    @unique
 }

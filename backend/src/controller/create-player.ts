@@ -1,8 +1,14 @@
+import { badRequestError } from "@/errors/bad-request-error.js";
+import { dataBaseError } from "@/errors/database-error.js";
 import { prisma } from "@/lib/prisma.js";
-import type { Request, Response } from "express";
+import type { NextFunction, Request, Response } from "express";
 import z from "zod";
 
-export const createPlayer = async (req: Request, res: Response) => {
+export const createPlayer = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   const bodySchema = z.object({
     name: z.string(),
     nickName: z.string(),
@@ -18,6 +24,23 @@ export const createPlayer = async (req: Request, res: Response) => {
     iem: z.number().optional(),
   });
 
+  let parsedBody;
+
+  try {
+    parsedBody = bodySchema.parse(req.body);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({
+        message: "Validation error",
+        errors: z.prettifyError(error),
+      });
+    }
+
+    return next(
+      new badRequestError("Something went wrong when requesting body")
+    );
+  }
+
   const {
     name,
     nickName,
@@ -28,35 +51,40 @@ export const createPlayer = async (req: Request, res: Response) => {
     blast,
     dreamhack,
     iem,
-  } = bodySchema.parse(req.body);
-  const playerWithAchievements = await prisma.player.create({
-    data: {
-      name: name,
-      nickName: nickName,
-      currentTeam: currentTeam ?? null,
-      dateOfBirth: dateOfBirth,
+  } = parsedBody;
 
-      Achievements: {
-        create: {
-          major: major ?? null,
-          eslProLeague: eslProLeague ?? null,
-          blast: blast ?? null,
-          dreamhack: dreamhack ?? null,
-          iem: iem ?? null,
+  try {
+    const playerWithAchievements = await prisma.player.create({
+      data: {
+        name: name,
+        nickName: nickName,
+        currentTeam: currentTeam ?? null,
+        dateOfBirth: dateOfBirth,
+
+        Achievements: {
+          create: {
+            major: major ?? null,
+            eslProLeague: eslProLeague ?? null,
+            blast: blast ?? null,
+            dreamhack: dreamhack ?? null,
+            iem: iem ?? null,
+          },
         },
       },
-    },
-    include: { Achievements: true },
-  });
+      include: { Achievements: true },
+    });
 
-  const formattedPlayer = {
-    ...playerWithAchievements,
-    dateOfBirth: playerWithAchievements.dateOfBirth.toLocaleString("pt-BR", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    }),
-  };
+    const formattedPlayer = {
+      ...playerWithAchievements,
+      dateOfBirth: playerWithAchievements.dateOfBirth.toLocaleString("pt-BR", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      }),
+    };
 
-  return res.json(formattedPlayer);
+    return res.json(formattedPlayer);
+  } catch {
+    return next(new dataBaseError("Database error try again later"));
+  }
 };

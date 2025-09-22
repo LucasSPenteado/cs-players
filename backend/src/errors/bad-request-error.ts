@@ -4,7 +4,7 @@ export class badRequestError extends CustomError {
   StatusCode = 400;
 
   constructor(public message: string) {
-    super(message);
+    super("Something went wrong when requesting the body");
     Object.setPrototypeOf(this, badRequestError.prototype);
   }
 

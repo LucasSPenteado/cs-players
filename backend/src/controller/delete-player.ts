@@ -1,17 +1,45 @@
+import { badRequestError } from "@/errors/bad-request-error.js";
+import { dataBaseError } from "@/errors/database-error.js";
 import { prisma } from "@/lib/prisma.js";
-import type { Request, Response } from "express";
+import type { NextFunction, Request, Response } from "express";
 import z from "zod";
 
-export const deletePlayer = async (req: Request, res: Response) => {
+export const deletePlayer = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   const paramsSchema = z.object({
     id: z.string().transform((value) => parseInt(value)),
   });
-  const { id } = paramsSchema.parse(req.params);
-  const player = await prisma.player.delete({
-    where: { id },
 
-    include: { Achievements: true },
-  });
+  let parsedParams;
 
-  return res.json(player);
+  try {
+    parsedParams = paramsSchema.parse(req.params);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({
+        message: "Validation error",
+        errors: z.prettifyError(error),
+      });
+    }
+    return next(
+      new badRequestError("Something went wrong when requesting params")
+    );
+  }
+
+  const { id } = parsedParams;
+
+  try {
+    const player = await prisma.player.delete({
+      where: { id },
+
+      include: { Achievements: true },
+    });
+
+    return res.json(player);
+  } catch {
+    return next(new dataBaseError("Database error try again later"));
+  }
 };

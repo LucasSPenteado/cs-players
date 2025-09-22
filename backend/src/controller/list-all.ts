@@ -1,10 +1,19 @@
+import { dataBaseError } from "@/errors/database-error.js";
 import { prisma } from "@/lib/prisma.js";
-import type { Request, Response } from "express";
+import type { NextFunction, Request, Response } from "express";
 
-export const listAll = async (req: Request, res: Response) => {
-  const playersList = await prisma.player.findMany({
-    include: { Achievements: true },
-  });
+export const listAll = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const playersList = await prisma.player.findMany({
+      include: { Achievements: true },
+    });
 
-  return res.json(playersList);
+    return res.json(playersList);
+  } catch {
+    return next(new dataBaseError("Database error try again later"));
+  }
 };

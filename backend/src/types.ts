@@ -4,6 +4,13 @@ export type Player = {
   nickName: string;
   age: number;
   currentTeam?: string;
-  teams: string;
-  achievements: string;
+};
+
+export type Achievements = {
+  major: number;
+  eslProLeague: number;
+  blast: number;
+  dreamhack: number;
+  iem: number;
+  playerId: number;
 };

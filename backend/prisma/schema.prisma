@@ -31,3 +31,12 @@ model Achievements {
   player       Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
   playerId     Int    @unique
 }
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  firstName String
+  lastName  String
+  password  String
+  createdAt DateTime @default(now())
+}

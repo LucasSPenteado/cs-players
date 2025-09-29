@@ -1,5 +1,5 @@
 import { AuthenticationError } from "@/errors/authentication-error.js";
-import { dataBaseError } from "@/errors/database-error.js";
+import { DataBaseError } from "@/errors/database-error.js";
 import { prisma } from "@/lib/prisma.js";
 import type { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
@@ -14,7 +14,7 @@ export const authenticateToken = async (
   if (token == null) return next(new AuthenticationError("No token provided"));
 
   if (!process.env.ACCESS_TOKEN_SECRET) {
-    return next(new dataBaseError("ACCESS_TOKEN_SECRET is not defined"));
+    return next(new DataBaseError("ACCESS_TOKEN_SECRET is not defined"));
   }
   try {
     const { email } = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET) as {

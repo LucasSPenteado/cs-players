@@ -1,5 +1,5 @@
-import { badRequestError } from "@/errors/bad-request-error.js";
-import { dataBaseError } from "@/errors/database-error.js";
+import { BadRequestError } from "@/errors/bad-request-error.js";
+import { DataBaseError } from "@/errors/database-error.js";
 import { prisma } from "@/lib/prisma.js";
 import type { NextFunction, Request, Response } from "express";
 import z from "zod";
@@ -37,7 +37,7 @@ export const createPlayer = async (
     }
 
     return next(
-      new badRequestError("Something went wrong when requesting body")
+      new BadRequestError("Something went wrong when requesting body")
     );
   }
 
@@ -85,6 +85,6 @@ export const createPlayer = async (
 
     return res.json(formattedPlayer);
   } catch {
-    return next(new dataBaseError("Database error try again later"));
+    return next(new DataBaseError("Database error try again later"));
   }
 };

@@ -1,4 +1,4 @@
-import { dataBaseError } from "@/errors/database-error.js";
+import { DataBaseError } from "@/errors/database-error.js";
 import { prisma } from "@/lib/prisma.js";
 import type { NextFunction, Request, Response } from "express";
 
@@ -14,6 +14,6 @@ export const listAll = async (
 
     return res.json(playersList);
   } catch {
-    return next(new dataBaseError("Database error try again later"));
+    return next(new DataBaseError("Database error try again later"));
   }
 };

@@ -1,11 +1,11 @@
 import { CustomError } from "@/utils/custom-error.js";
 
-export class badRequestError extends CustomError {
+export class BadRequestError extends CustomError {
   StatusCode = 400;
 
   constructor(public message: string) {
     super("Something went wrong when requesting the body");
-    Object.setPrototypeOf(this, badRequestError.prototype);
+    Object.setPrototypeOf(this, BadRequestError.prototype);
   }
 
   serialize(): { message: string } {

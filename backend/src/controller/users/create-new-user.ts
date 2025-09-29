@@ -1,13 +1,13 @@
-import { dataBaseError } from "@/errors/database-error.js";
+import { DataBaseError } from "@/errors/database-error.js";
 import { prisma } from "@/lib/prisma.js";
 import type { NextFunction, Request, Response } from "express";
 import z from "zod";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { badRequestError } from "@/errors/bad-request-error.js";
+import { BadRequestError } from "@/errors/bad-request-error.js";
 import { AuthenticationError } from "@/errors/authentication-error.js";
 
-export const userController = async (
+export const userCreateController = async (
   req: Request,
   res: Response,
   next: NextFunction
@@ -31,7 +31,7 @@ export const userController = async (
       });
     }
     return next(
-      new badRequestError("Something went wrong when requesting from the body")
+      new BadRequestError("Something went wrong when requesting from the body")
     );
   }
   const { email, firstName, lastName, password } = parsedBody;
@@ -63,17 +63,17 @@ export const userController = async (
     });
 
     if (!userPayload) {
-      return next(new dataBaseError("Database error try again later"));
+      return next(new DataBaseError("Database error try again later"));
     }
 
     if (!process.env.ACCESS_TOKEN_SECRET) {
-      return next(new dataBaseError("ACCESS_TOKEN_SECRET is not defined"));
+      return next(new DataBaseError("ACCESS_TOKEN_SECRET is not defined"));
     }
 
     const acessToken = jwt.sign(userPayload, process.env.ACCESS_TOKEN_SECRET);
 
     return res.json({ accessToken: acessToken }).status(201);
   } catch {
-    return next(new dataBaseError("Database error try again later"));
+    return next(new DataBaseError("Database error try again later"));
   }
 };

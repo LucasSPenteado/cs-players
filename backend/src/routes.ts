@@ -4,8 +4,9 @@ import { findOne } from "@/controller/players/find-one.js";
 import { deletePlayer } from "./controller/players/delete-player.js";
 import { updatePlayer } from "./controller/players/update-player.js";
 import { createPlayer } from "./controller/players/create-player.js";
-import { userController } from "./controller/users/create-new-user.js";
+import { userCreateController } from "./controller/users/create-new-user.js";
 import { authenticateToken } from "./middleware/authenticate-token.js";
+import { loginUserController } from "./controller/users/login-user.js";
 
 const router = Router();
 
@@ -14,6 +15,7 @@ router.get("/api/players/:id", findOne);
 router.delete("/api/players/:id", deletePlayer);
 router.put("/api/players/:id", updatePlayer);
 router.post("/api/players", createPlayer);
-router.post("/signup", userController);
+router.post("/signup", userCreateController);
+router.post("/login", loginUserController);
 
 export default router;

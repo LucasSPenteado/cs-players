@@ -1,10 +1,10 @@
 import { Router } from "express";
-import { listAll } from "@/controller/list-all.js";
-import { findOne } from "@/controller/find-one.js";
-import { deletePlayer } from "./controller/delete-player.js";
-import { updatePlayer } from "./controller/update-player.js";
-import { createPlayer } from "./controller/create-player.js";
-import { userController } from "./controller/create-new-user.js";
+import { listAll } from "@/controller/players/list-all.js";
+import { findOne } from "@/controller/players/find-one.js";
+import { deletePlayer } from "./controller/players/delete-player.js";
+import { updatePlayer } from "./controller/players/update-player.js";
+import { createPlayer } from "./controller/players/create-player.js";
+import { userController } from "./controller/users/create-new-user.js";
 import { authenticateToken } from "./middleware/authenticate-token.js";
 
 const router = Router();

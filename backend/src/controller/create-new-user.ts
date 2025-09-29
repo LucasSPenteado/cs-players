@@ -1,12 +1,11 @@
-import { AuthenticationError } from "@/errors/authentication-error.js";
-import { badRequestError } from "@/errors/bad-request-error.js";
 import { dataBaseError } from "@/errors/database-error.js";
 import { prisma } from "@/lib/prisma.js";
 import type { NextFunction, Request, Response } from "express";
 import z from "zod";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { envError } from "@/errors/environment-variable-error.js";
+import { badRequestError } from "@/errors/bad-request-error.js";
+import { AuthenticationError } from "@/errors/authentication-error.js";
 
 export const userController = async (
   req: Request,
@@ -59,8 +58,8 @@ export const userController = async (
       where: {
         id: newUser.id,
         email: newUser.email,
-        createdAt: newUser.createdAt,
       },
+      select: { id: true, email: true, createdAt: true },
     });
 
     if (!userPayload) {
@@ -68,7 +67,7 @@ export const userController = async (
     }
 
     if (!process.env.ACCESS_TOKEN_SECRET) {
-      return next(new envError("ACCESS_TOKEN_SECRET is not defined"));
+      return next(new dataBaseError("ACCESS_TOKEN_SECRET is not defined"));
     }
 
     const acessToken = jwt.sign(userPayload, process.env.ACCESS_TOKEN_SECRET);

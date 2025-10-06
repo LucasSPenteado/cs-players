@@ -10,24 +10,24 @@ export const authenticateToken = async (
   next: NextFunction
 ) => {
   const authHeader = req.headers["authorization"];
-  const token = authHeader && authHeader.split(" ")[1];
-  if (token == null) return next(new AuthenticationError("No token provided"));
+  const accessToken = authHeader && authHeader.split(" ")[1];
+  if (!accessToken) return next(new AuthenticationError("No token provided"));
 
   if (!process.env.ACCESS_TOKEN_SECRET) {
-    return next(new DataBaseError("ACCESS_TOKEN_SECRET is not defined"));
+    return next(new DataBaseError("REFRESH_TOKEN_SECRET is not defined"));
   }
   try {
-    const { email } = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET) as {
-      email: string;
-    };
+    const { email } = jwt.verify(
+      accessToken,
+      process.env.ACCESS_TOKEN_SECRET
+    ) as { email: string };
 
     const user = await prisma.user.findUnique({
       where: { email: email },
       select: { email: true, firstName: true, lastName: true },
     });
-
     if (!user) {
-      return next(new AuthenticationError("User not found"));
+      return next(new DataBaseError("No user with this token"));
     }
 
     req.user = user;

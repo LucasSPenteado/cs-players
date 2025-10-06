@@ -6,6 +6,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { BadRequestError } from "@/errors/bad-request-error.js";
 import { AuthenticationError } from "@/errors/authentication-error.js";
+import { generateAccessToken } from "@/utils/generate-access-token.js";
 
 export const userCreateController = async (
   req: Request,
@@ -66,13 +67,31 @@ export const userCreateController = async (
       return next(new DataBaseError("Database error try again later"));
     }
 
-    if (!process.env.ACCESS_TOKEN_SECRET) {
-      return next(new DataBaseError("ACCESS_TOKEN_SECRET is not defined"));
+    if (!process.env.REFRESH_TOKEN_SECRET) {
+      return next(new DataBaseError("REFRESH_TOKEN_SECRET is not defined"));
     }
 
-    const acessToken = jwt.sign(userPayload, process.env.ACCESS_TOKEN_SECRET);
+    const refreshToken = jwt.sign(
+      userPayload,
+      process.env.REFRESH_TOKEN_SECRET
+    );
+    const accessToken = generateAccessToken(
+      {
+        id: newUser.id,
+        email: email,
+        firstName: firstName,
+        lastName: lastName,
+      },
+      next
+    );
 
-    return res.json({ accessToken: acessToken }).status(201);
+    await prisma.refreshToken.create({
+      data: { token: refreshToken, userId: newUser.id },
+    });
+
+    return res
+      .json({ refreshToken: refreshToken, accessToken: accessToken })
+      .status(201);
   } catch {
     return next(new DataBaseError("Database error try again later"));
   }

@@ -1,6 +1,7 @@
 import { BadRequestError } from "@/errors/bad-request-error.js";
 import { DataBaseError } from "@/errors/database-error.js";
 import { prisma } from "@/lib/prisma.js";
+import bcrypt from "bcryptjs";
 import type { NextFunction, Request, Response } from "express";
 import z from "zod";
 
@@ -33,12 +34,17 @@ export const loginUserController = async (
   const { email, password } = parsedBody;
 
   try {
-    const isMatch = await prisma.user.findUnique({
+    const users = await prisma.user.findUnique({
       where: { email: email, password: password },
       select: { email: true, password: true },
     });
+    if (!users) {
+      return next(new BadRequestError("Invalid email or password"));
+    }
+
+    const isMatch = await bcrypt.compare(password, users.password);
     if (!isMatch) {
-      return next(new DataBaseError(""));
+      return next(new BadRequestError("Invalid password"));
     }
   } catch {
     return next(new DataBaseError("Database error try again later"));

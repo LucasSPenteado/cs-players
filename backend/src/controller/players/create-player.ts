@@ -1,4 +1,3 @@
-import { BadRequestError } from "@/errors/bad-request-error.js";
 import { DataBaseError } from "@/errors/database-error.js";
 import { prisma } from "@/lib/prisma.js";
 import type { NextFunction, Request, Response } from "express";
@@ -28,32 +27,19 @@ export const createPlayer = async (
 
   try {
     parsedBody = bodySchema.parse(req.body);
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return res.status(400).json({
-        message: "Validation error",
-        errors: z.prettifyError(error),
-      });
-    }
 
-    return next(
-      new BadRequestError("Something went wrong when requesting body")
-    );
-  }
+    const {
+      name,
+      nickName,
+      dateOfBirth,
+      currentTeam,
+      major,
+      eslProLeague,
+      blast,
+      dreamhack,
+      iem,
+    } = parsedBody;
 
-  const {
-    name,
-    nickName,
-    dateOfBirth,
-    currentTeam,
-    major,
-    eslProLeague,
-    blast,
-    dreamhack,
-    iem,
-  } = parsedBody;
-
-  try {
     const playerWithAchievements = await prisma.player.create({
       data: {
         name: name,
@@ -84,7 +70,13 @@ export const createPlayer = async (
     };
 
     return res.json(formattedPlayer);
-  } catch {
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({
+        message: "Validation error",
+        errors: z.prettifyError(error),
+      });
+    }
     return next(new DataBaseError("Database error try again later"));
   }
 };

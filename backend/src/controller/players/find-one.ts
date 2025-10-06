@@ -1,4 +1,3 @@
-import { BadRequestError } from "@/errors/bad-request-error.js";
 import { DataBaseError } from "@/errors/database-error.js";
 import { prisma } from "@/lib/prisma.js";
 import type { NextFunction, Request, Response } from "express";
@@ -17,6 +16,13 @@ export const findOne = async (
 
   try {
     parsedParams = paramsSchema.parse(req.params);
+    const { id } = parsedParams;
+    const player = await prisma.player.findUnique({
+      where: { id },
+      include: { Achievements: true },
+    });
+
+    return res.json(player);
   } catch (error) {
     if (error instanceof z.ZodError) {
       return res.status(400).json({
@@ -24,21 +30,6 @@ export const findOne = async (
         errors: z.prettifyError(error),
       });
     }
-    return next(
-      new BadRequestError("Something went wrong when requesting params")
-    );
-  }
-
-  const { id } = parsedParams;
-
-  try {
-    const player = await prisma.player.findUnique({
-      where: { id },
-      include: { Achievements: true },
-    });
-
-    return res.json(player);
-  } catch {
     return next(new DataBaseError("Database error try again later"));
   }
 };

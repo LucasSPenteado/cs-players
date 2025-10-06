@@ -3,10 +3,9 @@ import { prisma } from "@/lib/prisma.js";
 import type { NextFunction, Request, Response } from "express";
 import z from "zod";
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
-import { BadRequestError } from "@/errors/bad-request-error.js";
 import { AuthenticationError } from "@/errors/authentication-error.js";
 import { generateAccessToken } from "@/utils/generate-access-token.js";
+import { generateRefreshToken } from "@/utils/generate-refresh-token.js";
 
 export const userCreateController = async (
   req: Request,
@@ -24,20 +23,7 @@ export const userCreateController = async (
 
   try {
     parsedBody = bodySchema.parse(req.body);
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return res.status(400).json({
-        message: "Validation error",
-        errors: z.prettifyError(error),
-      });
-    }
-    return next(
-      new BadRequestError("Something went wrong when requesting from the body")
-    );
-  }
-  const { email, firstName, lastName, password } = parsedBody;
-
-  try {
+    const { email, firstName, lastName, password } = parsedBody;
     const userCheck = await prisma.user.findUnique({ where: { email: email } });
     if (userCheck) {
       return next(new AuthenticationError("This email is already in use"));
@@ -60,30 +46,22 @@ export const userCreateController = async (
         id: newUser.id,
         email: newUser.email,
       },
-      select: { id: true, email: true, createdAt: true },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        createdAt: true,
+      },
     });
 
     if (!userPayload) {
-      return next(new DataBaseError("Database error try again later"));
+      throw next(new DataBaseError(""));
     }
 
-    if (!process.env.REFRESH_TOKEN_SECRET) {
-      return next(new DataBaseError("REFRESH_TOKEN_SECRET is not defined"));
-    }
+    const refreshToken = await generateRefreshToken(userPayload);
 
-    const refreshToken = jwt.sign(
-      userPayload,
-      process.env.REFRESH_TOKEN_SECRET
-    );
-    const accessToken = generateAccessToken(
-      {
-        id: newUser.id,
-        email: email,
-        firstName: firstName,
-        lastName: lastName,
-      },
-      next
-    );
+    const accessToken = generateAccessToken(userPayload);
 
     await prisma.refreshToken.create({
       data: { token: refreshToken, userId: newUser.id },
@@ -92,7 +70,13 @@ export const userCreateController = async (
     return res
       .json({ refreshToken: refreshToken, accessToken: accessToken })
       .status(201);
-  } catch {
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({
+        message: "Validation error",
+        errors: z.prettifyError(error),
+      });
+    }
     return next(new DataBaseError("Database error try again later"));
   }
 };

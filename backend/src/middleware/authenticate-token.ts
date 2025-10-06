@@ -1,3 +1,4 @@
+import { env } from "@/env/index.js";
 import { AuthenticationError } from "@/errors/authentication-error.js";
 import { DataBaseError } from "@/errors/database-error.js";
 import { prisma } from "@/lib/prisma.js";
@@ -13,26 +14,25 @@ export const authenticateToken = async (
   const accessToken = authHeader && authHeader.split(" ")[1];
   if (!accessToken) return next(new AuthenticationError("No token provided"));
 
-  if (!process.env.ACCESS_TOKEN_SECRET) {
-    return next(new DataBaseError("REFRESH_TOKEN_SECRET is not defined"));
-  }
   try {
-    const { email } = jwt.verify(
-      accessToken,
-      process.env.ACCESS_TOKEN_SECRET
-    ) as { email: string };
+    const { email } = jwt.verify(accessToken, env.ACCESS_TOKEN_SECRET) as {
+      email: string;
+    };
 
     const user = await prisma.user.findUnique({
       where: { email: email },
       select: { email: true, firstName: true, lastName: true },
     });
     if (!user) {
-      return next(new DataBaseError("No user with this token"));
+      throw new DataBaseError("");
     }
 
     req.user = user;
     next();
-  } catch {
+  } catch (error) {
+    if (error instanceof DataBaseError) {
+      return next(new DataBaseError("Error fetching user from database"));
+    }
     return res.status(403).json({ message: "Invalid token" });
   }
 };

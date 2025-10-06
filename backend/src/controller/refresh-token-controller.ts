@@ -1,8 +1,10 @@
+import { env } from "@/env/index.js";
 import { AuthenticationError } from "@/errors/authentication-error.js";
 import { BadRequestError } from "@/errors/bad-request-error.js";
 import { DataBaseError } from "@/errors/database-error.js";
 import { prisma } from "@/lib/prisma.js";
 import { generateAccessToken } from "@/utils/generate-access-token.js";
+import { generateRefreshToken } from "@/utils/generate-refresh-token.js";
 import type { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 
@@ -18,7 +20,7 @@ export const refreshTokenController = async (
   res.clearCookie("jwt", { httpOnly: true, sameSite: "none", secure: true });
 
   try {
-    if (!refreshToken || !process.env.REFRESH_TOKEN_SECRET) {
+    if (!refreshToken) {
       throw new AuthenticationError("");
     }
 
@@ -27,16 +29,14 @@ export const refreshTokenController = async (
     });
 
     if (!foundUser) {
-      throw new DataBaseError("No user with this token");
+      throw new DataBaseError("");
     }
-    jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+
+    jwt.verify(refreshToken, env.REFRESH_TOKEN_SECRET);
 
     await prisma.refreshToken.delete({ where: { token: refreshToken } });
 
-    const { id } = jwt.verify(
-      refreshToken,
-      process.env.REFRESH_TOKEN_SECRET
-    ) as {
+    const { id } = jwt.verify(refreshToken, env.REFRESH_TOKEN_SECRET) as {
       id: number;
     };
 
@@ -49,16 +49,19 @@ export const refreshTokenController = async (
       throw new DataBaseError("");
     }
 
-    const newAccessToken = generateAccessToken(user, next);
+    const newAccessToken = generateAccessToken(user);
 
-    const newRefreshToken = jwt.sign(user, process.env.REFRESH_TOKEN_SECRET);
+    const newRefreshToken = await generateRefreshToken(user);
 
     await prisma.refreshToken.create({
       data: { userId: id, token: newRefreshToken },
     });
 
     return res
-      .json({ newRefreshToken: newRefreshToken, accessToken: newAccessToken })
+      .json({
+        newRefreshToken: newRefreshToken,
+        newAccessToken: newAccessToken,
+      })
       .status(200);
   } catch (error) {
     if (error instanceof DataBaseError) {

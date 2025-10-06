@@ -1,5 +1,4 @@
-import { DataBaseError } from "@/errors/database-error.js";
-import type { NextFunction } from "express";
+import { env } from "@/env/index.js";
 import jwt from "jsonwebtoken";
 
 interface UserPayLoadProps {
@@ -9,14 +8,8 @@ interface UserPayLoadProps {
   lastName: string;
 }
 
-export const generateAccessToken = (
-  userPayLoad: UserPayLoadProps,
-  next: NextFunction
-) => {
-  if (!process.env.ACCESS_TOKEN_SECRET) {
-    return next(new DataBaseError("No access token defined"));
-  }
-  return jwt.sign(userPayLoad, process.env.ACCESS_TOKEN_SECRET, {
+export const generateAccessToken = (userPayLoad: UserPayLoadProps) => {
+  return jwt.sign(userPayLoad, env.ACCESS_TOKEN_SECRET, {
     expiresIn: "15s",
   });
 };

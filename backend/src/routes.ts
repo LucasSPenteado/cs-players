@@ -7,6 +7,7 @@ import { createPlayer } from "./controller/players/create-player.js";
 import { userCreateController } from "./controller/users/create-new-user.js";
 import { authenticateToken } from "./middleware/authenticate-token.js";
 import { loginUserController } from "./controller/users/login-user.js";
+import { refreshTokenController } from "./controller/refresh-token-controller.js";
 
 const router = Router();
 
@@ -17,5 +18,6 @@ router.put("/api/players/:id", updatePlayer);
 router.post("/api/players", createPlayer);
 router.post("/signup", userCreateController, authenticateToken);
 router.post("/login", loginUserController);
+router.post("/authenticate", refreshTokenController);
 
 export default router;

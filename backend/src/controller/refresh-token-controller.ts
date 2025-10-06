@@ -1,4 +1,5 @@
 import { AuthenticationError } from "@/errors/authentication-error.js";
+import { BadRequestError } from "@/errors/bad-request-error.js";
 import { DataBaseError } from "@/errors/database-error.js";
 import { prisma } from "@/lib/prisma.js";
 import { generateAccessToken } from "@/utils/generate-access-token.js";
@@ -10,7 +11,11 @@ export const refreshTokenController = async (
   res: Response,
   next: NextFunction
 ) => {
-  const refreshToken = req.body.refreshToken;
+  const cookies = req.cookies;
+  if (!cookies?.jwt) return next(new BadRequestError("Bad request of cookies"));
+
+  const refreshToken = req.cookies.jwt;
+  res.clearCookie("jwt", { httpOnly: true, sameSite: "none", secure: true });
 
   try {
     if (!refreshToken || !process.env.REFRESH_TOKEN_SECRET) {

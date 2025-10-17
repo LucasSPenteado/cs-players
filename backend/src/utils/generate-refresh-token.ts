@@ -8,7 +8,7 @@ interface UserPayLoadProps {
 
 export const generateRefreshToken = async (userPayload: UserPayLoadProps) => {
   const refreshToken = jwt.sign(userPayload, env.REFRESH_TOKEN_SECRET, {
-    expiresIn: "15s",
+    expiresIn: "1d",
   });
 
   await prisma.refreshToken.create({

@@ -19,14 +19,12 @@ export const userCreateController = async (
     password: z.string(),
   });
 
-  let parsedBody;
-
   try {
-    parsedBody = bodySchema.parse(req.body);
+    const parsedBody = bodySchema.parse(req.body);
     const { email, firstName, lastName, password } = parsedBody;
     const userCheck = await prisma.user.findUnique({ where: { email: email } });
     if (userCheck) {
-      return next(new AuthenticationError("This email is already in use"));
+      throw new AuthenticationError("");
     }
 
     const hashedPassword = await bcrypt.hash(password, 8);
@@ -41,41 +39,34 @@ export const userCreateController = async (
       },
     });
 
-    const userPayload = await prisma.user.findUnique({
-      where: {
-        id: newUser.id,
-        email: newUser.email,
-      },
-      select: {
-        id: true,
-        email: true,
-        firstName: true,
-        lastName: true,
-        createdAt: true,
-      },
-    });
-
-    if (!userPayload) {
-      throw next(new DataBaseError(""));
-    }
+    const userPayload = { email, firstName, lastName, id: newUser.id };
 
     const refreshToken = await generateRefreshToken(userPayload);
 
     const accessToken = generateAccessToken(userPayload);
 
-    await prisma.refreshToken.create({
-      data: { token: refreshToken, userId: newUser.id },
-    });
-
-    return res
-      .json({ refreshToken: refreshToken, accessToken: accessToken })
-      .status(201);
+    res
+      .cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        sameSite: "none",
+        secure: true,
+      })
+      .cookie("accessToken", accessToken, {
+        httpOnly: true,
+        sameSite: "none",
+        secure: true,
+      })
+      .status(201)
+      .send();
   } catch (error) {
     if (error instanceof z.ZodError) {
       return res.status(400).json({
         message: "Validation error",
         errors: z.prettifyError(error),
       });
+    }
+    if (error instanceof AuthenticationError) {
+      return next(new AuthenticationError("This email is already in use"));
     }
     return next(new DataBaseError("Database error try again later"));
   }

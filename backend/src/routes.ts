@@ -8,6 +8,7 @@ import { userCreateController } from "./controller/users/create-new-user.js";
 import { authenticateToken } from "./middleware/authenticate-token.js";
 import { loginUserController } from "./controller/users/login-user.js";
 import { refreshTokenController } from "./controller/refresh-token-controller.js";
+import { logoutUserController } from "./controller/users/logout-user.js";
 
 const router = Router();
 
@@ -16,8 +17,9 @@ router.get("/api/players/:id", findOne);
 router.delete("/api/players/:id", deletePlayer);
 router.put("/api/players/:id", updatePlayer);
 router.post("/api/players", createPlayer);
-router.post("/signup", userCreateController, authenticateToken);
+router.post("/signup", userCreateController);
 router.post("/login", loginUserController);
 router.post("/authenticate", refreshTokenController);
+router.post("/logout", logoutUserController);
 
 export default router;

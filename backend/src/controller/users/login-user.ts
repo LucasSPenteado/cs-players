@@ -17,19 +17,17 @@ export const loginUserController = async (
     password: z.string(),
   });
 
-  let parsedBody;
-
   try {
-    parsedBody = bodySchema.parse(req.body);
+    const parsedBody = bodySchema.parse(req.body);
 
     const { email, password } = parsedBody;
 
     const user = await prisma.user.findUnique({
-      where: { email: email, password: password },
+      where: { email: email },
     });
 
     if (!user) {
-      throw next(new BadRequestError(""));
+      throw next(new BadRequestError("wrong password"));
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
@@ -40,7 +38,13 @@ export const loginUserController = async (
 
     const userData = await prisma.user.findUnique({
       where: { id: user.id },
-      select: { id: true, email: true, firstName: true, lastName: true },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        createdAt: true,
+      },
     });
 
     if (!userData) {
@@ -51,11 +55,19 @@ export const loginUserController = async (
 
     const accessToken = generateAccessToken(userData);
 
-    await prisma.refreshToken.create({
-      data: { token: refreshToken, userId: user.id },
-    });
-
-    return res.json({ accessToken, refreshToken }).status(200);
+    res
+      .cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        sameSite: "none",
+        secure: true,
+      })
+      .cookie("accessToken", accessToken, {
+        httpOnly: true,
+        sameSite: "none",
+        secure: true,
+      })
+      .status(200)
+      .send();
   } catch (error) {
     if (error instanceof z.ZodError) {
       return res.status(400).json({

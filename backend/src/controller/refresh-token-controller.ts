@@ -19,11 +19,11 @@ export const refreshTokenController = async (
   const refreshToken = req.cookies.jwt;
   res.clearCookie("jwt", { httpOnly: true, sameSite: "none", secure: true });
 
-  try {
-    if (!refreshToken) {
-      throw new AuthenticationError("");
-    }
+  if (!refreshToken) {
+    throw new AuthenticationError("");
+  }
 
+  try {
     const foundUser = await prisma.refreshToken.findUnique({
       where: { token: refreshToken },
     });
@@ -32,17 +32,21 @@ export const refreshTokenController = async (
       throw new DataBaseError("");
     }
 
-    jwt.verify(refreshToken, env.REFRESH_TOKEN_SECRET);
-
-    await prisma.refreshToken.delete({ where: { token: refreshToken } });
-
     const { id } = jwt.verify(refreshToken, env.REFRESH_TOKEN_SECRET) as {
       id: number;
     };
 
+    await prisma.refreshToken.delete({ where: { token: refreshToken } });
+
     const user = await prisma.user.findUnique({
       where: { id: id },
-      select: { id: true, email: true, firstName: true, lastName: true },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        createdAt: true,
+      },
     });
 
     if (!user) {
@@ -53,16 +57,19 @@ export const refreshTokenController = async (
 
     const newRefreshToken = await generateRefreshToken(user);
 
-    await prisma.refreshToken.create({
-      data: { userId: id, token: newRefreshToken },
-    });
-
-    return res
-      .json({
-        newRefreshToken: newRefreshToken,
-        newAccessToken: newAccessToken,
+    res
+      .cookie("refreshToken", newRefreshToken, {
+        httpOnly: true,
+        sameSite: "none",
+        secure: true,
       })
-      .status(200);
+      .cookie("accessToken", newAccessToken, {
+        httpOnly: true,
+        sameSite: "none",
+        secure: true,
+      })
+      .status(201)
+      .send();
   } catch (error) {
     if (error instanceof DataBaseError) {
       return next(new DataBaseError("User not found"));

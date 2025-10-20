@@ -23,10 +23,8 @@ export const createPlayer = async (
     iem: z.number().optional(),
   });
 
-  let parsedBody;
-
   try {
-    parsedBody = bodySchema.parse(req.body);
+    const parsedBody = bodySchema.parse(req.body);
 
     const {
       name,

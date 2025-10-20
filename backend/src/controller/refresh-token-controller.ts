@@ -16,22 +16,18 @@ export const refreshTokenController = async (
   const cookies = req.cookies;
   if (!cookies?.jwt) return next(new BadRequestError("Bad request of cookies"));
 
-  const refreshToken = req.cookies.jwt;
-  res.clearCookie("jwt", { httpOnly: true, sameSite: "none", secure: true });
+  const refreshToken = req.cookies.refreshToken;
+  res.clearCookie("refreshToken", {
+    httpOnly: true,
+    sameSite: "none",
+    secure: true,
+  });
 
   if (!refreshToken) {
-    throw new AuthenticationError("");
+    return next(new AuthenticationError("Not refresh token found"));
   }
 
   try {
-    const foundUser = await prisma.refreshToken.findUnique({
-      where: { token: refreshToken },
-    });
-
-    if (!foundUser) {
-      throw new DataBaseError("");
-    }
-
     const { id } = jwt.verify(refreshToken, env.REFRESH_TOKEN_SECRET) as {
       id: number;
     };

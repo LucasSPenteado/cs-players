@@ -14,7 +14,7 @@ const router = Router();
 
 router.get("/api/players", authenticateToken, listAll);
 router.get("/api/players/:id", findOne);
-router.delete("/api/players/:id", deletePlayer);
+router.delete("/api/players/:id", authenticateToken, deletePlayer);
 router.put("/api/players/:id", updatePlayer);
 router.post("/api/players", createPlayer);
 router.post("/signup", userCreateController);

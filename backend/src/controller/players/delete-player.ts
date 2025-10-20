@@ -12,10 +12,8 @@ export const deletePlayer = async (
     id: z.string().transform((value) => parseInt(value)),
   });
 
-  let parsedParams;
-
   try {
-    parsedParams = paramsSchema.parse(req.params);
+    const parsedParams = paramsSchema.parse(req.params);
     const { id } = parsedParams;
     const player = await prisma.player.delete({
       where: { id },

@@ -26,12 +26,9 @@ export const updatePlayer = async (
     iem: z.number().optional(),
   });
 
-  let parsedParams;
-  let parsedBody;
-
   try {
-    parsedParams = paramsSchema.parse(req.params);
-    parsedBody = bodySchema.parse(req.body);
+    const parsedParams = paramsSchema.parse(req.params);
+    const parsedBody = bodySchema.parse(req.body);
     const { id } = parsedParams;
     const {
       name,

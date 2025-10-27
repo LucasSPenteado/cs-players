@@ -1,4 +1,28 @@
+import axios from "axios";
+import { useState, type FormEvent } from "react";
+
 const LoginForm = () => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const userData = {
+      email,
+      password,
+    };
+    axios
+      .post("http://localhost:3000/api/login", {
+        email: userData.email,
+        password: userData.password,
+      })
+      .then((response) => {
+        console.log(response);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  };
   return (
     <div className="flex min-h-screen items-center justify-center bg-black text-gray-200">
       <div className="w-full max-w-sm rounded-2xl bg-zinc-900 p-8 shadow-lg">
@@ -7,7 +31,7 @@ const LoginForm = () => {
           Enter your email below to login to your account
         </p>
 
-        <form className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div>
             <label htmlFor="email" className="mb-2 block text-sm">
               Email
@@ -17,6 +41,8 @@ const LoginForm = () => {
               type="email"
               placeholder="m@example.com"
               className="w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 focus:ring-2 focus:ring-gray-500 focus:outline-none"
+              onChange={(e) => setEmail(e.target.value)}
+              value={email}
             />
           </div>
 
@@ -36,6 +62,8 @@ const LoginForm = () => {
               id="password"
               type="password"
               className="w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 focus:ring-2 focus:ring-gray-500 focus:outline-none"
+              onChange={(e) => setPassword(e.target.value)}
+              value={password}
             />
           </div>
 

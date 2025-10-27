@@ -1,27 +1,32 @@
-import axios from "axios";
+import axiosInstance from "../services/axios";
 import { useState, type FormEvent } from "react";
+import { useCookies } from "react-cookie";
 
 const LoginForm = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [cookies, setCookie] = useCookies(["refreshToken", "accessToken"]);
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const userData = {
       email,
       password,
     };
-    axios
-      .post("http://localhost:3000/api/login", {
+    try {
+      const res = await axiosInstance.post("/login", {
         email: userData.email,
         password: userData.password,
-      })
-      .then((response) => {
-        console.log(response);
-      })
-      .catch((error) => {
-        console.log(error);
       });
+      if (res.status === 200) {
+        setCookie("refreshToken", res.data.refreshToken);
+        setCookie("accessToken", res.data.accessToken);
+      }
+      console.log(res);
+    } catch (error) {
+      console.error(error);
+    }
   };
   return (
     <div className="flex min-h-screen items-center justify-center bg-black text-gray-200">

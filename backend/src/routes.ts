@@ -17,9 +17,9 @@ router.get("/api/players/:id", findOne);
 router.delete("/api/players/:id", authenticateToken, deletePlayer);
 router.put("/api/players/:id", updatePlayer);
 router.post("/api/players", createPlayer);
-router.post("/signup", userCreateController);
-router.post("/login", loginUserController);
-router.post("/authenticate", refreshTokenController);
-router.post("/logout", logoutUserController);
+router.post("/api/signup", userCreateController);
+router.post("/api/login", loginUserController);
+router.post("/api/authenticate", refreshTokenController);
+router.post("/api/logout", logoutUserController);
 
 export default router;

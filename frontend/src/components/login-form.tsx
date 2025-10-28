@@ -7,6 +7,7 @@ const LoginForm = () => {
   const [password, setPassword] = useState("");
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [cookies, setCookie] = useCookies(["refreshToken", "accessToken"]);
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -23,10 +24,18 @@ const LoginForm = () => {
         setCookie("refreshToken", res.data.refreshToken);
         setCookie("accessToken", res.data.accessToken);
       }
-      console.log(res);
     } catch (error) {
-      console.error(error);
+      setError(error as string);
+      console.error("Login error:", error);
+      renderError();
     }
+  };
+
+  const renderError = () => {
+    if (!error) return console.log("eu amo pica");
+    return (
+      <div className="mb-4 rounded-md bg-red-100 p-4 text-red-700">{error}</div>
+    );
   };
   return (
     <div className="flex min-h-screen items-center justify-center bg-black text-gray-200">

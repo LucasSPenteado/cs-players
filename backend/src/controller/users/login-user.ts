@@ -1,4 +1,3 @@
-import { BadRequestError } from "@/errors/bad-request-error.js";
 import { DataBaseError } from "@/errors/database-error.js";
 import { prisma } from "@/lib/prisma.js";
 import bcrypt from "bcryptjs";
@@ -6,6 +5,8 @@ import type { NextFunction, Request, Response } from "express";
 import z from "zod";
 import { generateAccessToken } from "@/utils/generate-access-token.js";
 import { generateRefreshToken } from "@/utils/generate-refresh-token.js";
+import { AuthenticationError } from "@/errors/authentication-error.js";
+import { BadRequestError } from "@/errors/bad-request-error.js";
 
 export const loginUserController = async (
   req: Request,
@@ -20,6 +21,10 @@ export const loginUserController = async (
   try {
     const parsedBody = bodySchema.parse(req.body);
 
+    if (!parsedBody) {
+      throw next(new BadRequestError(""));
+    }
+
     const { email, password } = parsedBody;
 
     const user = await prisma.user.findUnique({
@@ -27,29 +32,22 @@ export const loginUserController = async (
     });
 
     if (!user) {
-      throw next(new BadRequestError("wrong password"));
+      throw next(new AuthenticationError(""));
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
-      throw next(new BadRequestError("Wrong email or password"));
+      throw next(new AuthenticationError(""));
     }
 
-    const userData = await prisma.user.findUnique({
-      where: { id: user.id },
-      select: {
-        id: true,
-        email: true,
-        firstName: true,
-        lastName: true,
-        createdAt: true,
-      },
-    });
-
-    if (!userData) {
-      throw next(new DataBaseError(""));
-    }
+    const userData = {
+      id: user.id,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      createdAt: user.createdAt,
+    };
 
     const refreshToken = await generateRefreshToken(userData);
 
@@ -77,7 +75,11 @@ export const loginUserController = async (
     }
 
     if (error instanceof BadRequestError) {
-      return next(new BadRequestError("Bad request"));
+      return next(new BadRequestError("Invalid request data"));
+    }
+
+    if (error instanceof AuthenticationError) {
+      return next(new AuthenticationError("Wrong email or password"));
     }
 
     return next(new DataBaseError("Database error try again later"));

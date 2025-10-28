@@ -39,7 +39,13 @@ export const userCreateController = async (
       },
     });
 
-    const userPayload = { email, firstName, lastName, id: newUser.id };
+    const userPayload = {
+      email,
+      firstName,
+      lastName,
+      id: newUser.id,
+      createdAt: newUser.createdAt,
+    };
 
     const refreshToken = await generateRefreshToken(userPayload);
 

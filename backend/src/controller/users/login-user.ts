@@ -1,4 +1,3 @@
-import { DataBaseError } from "@/errors/database-error.js";
 import { prisma } from "@/lib/prisma.js";
 import bcrypt from "bcryptjs";
 import type { NextFunction, Request, Response } from "express";
@@ -22,7 +21,7 @@ export const loginUserController = async (
     const parsedBody = bodySchema.parse(req.body);
 
     if (!parsedBody) {
-      throw next(new BadRequestError(""));
+      throw new BadRequestError("");
     }
 
     const { email, password } = parsedBody;
@@ -32,13 +31,13 @@ export const loginUserController = async (
     });
 
     if (!user) {
-      throw next(new AuthenticationError(""));
+      throw new AuthenticationError("");
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
-      throw next(new AuthenticationError(""));
+      throw new AuthenticationError("");
     }
 
     const userData = {
@@ -82,6 +81,6 @@ export const loginUserController = async (
       return next(new AuthenticationError("Wrong email or password"));
     }
 
-    return next(new DataBaseError("Database error try again later"));
+    return next(new Error("Internal server error"));
   }
 };

@@ -1,6 +1,8 @@
+import { AxiosError } from "axios";
 import axiosInstance from "../services/axios";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useCookies } from "react-cookie";
+import { CircleAlert } from "lucide-react";
 
 const LoginForm = () => {
   const [email, setEmail] = useState("");
@@ -8,6 +10,7 @@ const LoginForm = () => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [cookies, setCookie] = useCookies(["refreshToken", "accessToken"]);
   const [error, setError] = useState("");
+  const [showError, setShowError] = useState(false);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -25,26 +28,37 @@ const LoginForm = () => {
         setCookie("accessToken", res.data.accessToken);
       }
     } catch (error) {
-      setError(error as string);
-      console.error("Login error:", error);
-      renderError();
+      setError(
+        error instanceof AxiosError
+          ? error.response?.data.message
+          : "An error has occurred",
+      );
+      setShowError(true);
     }
   };
 
-  const renderError = () => {
-    if (!error) return console.log("eu amo pica");
-    return (
-      <div className="mb-4 rounded-md bg-red-100 p-4 text-red-700">{error}</div>
-    );
-  };
+  useEffect(() => {
+    if (!showError) return;
+    const timer = setTimeout(() => {
+      setShowError(false);
+      setError("");
+    }, 5000);
+    return () => clearTimeout(timer);
+  }, [showError]);
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-black text-gray-200">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-black text-gray-200">
+      {showError && (
+        <div className="mb-8 flex w-full max-w-sm gap-2 rounded-2xl bg-zinc-900 p-4">
+          <CircleAlert className="text-red-400" />
+          <p>{error}</p>
+        </div>
+      )}
       <div className="w-full max-w-sm rounded-2xl bg-zinc-900 p-8 shadow-lg">
         <h2 className="mb-1 text-xl font-semibold">Login to your account</h2>
         <p className="mb-6 text-sm text-gray-400">
           Enter your email below to login to your account
         </p>
-
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
             <label htmlFor="email" className="mb-2 block text-sm">
